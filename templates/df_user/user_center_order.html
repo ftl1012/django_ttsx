@@ -1,0 +1,63 @@
+{% extends 'df_user/base.html' %}
+
+{%block head%}{%endblock head%}
+
+{% block body %}
+
+	<div class="main_con clearfix">
+		<div class="left_menu_con clearfix">
+			<h3>用户中心</h3>
+			<ul>
+				<li><a href="/user/info/">· 个人信息</a></li>
+				<li><a href="/user/order/" class="active">· 全部订单</a></li>
+				<li><a href="/user/site/">· 收货地址</a></li>
+			</ul>
+		</div>
+		<div class="right_content clearfix">
+				<h3 class="common_title2">全部订单</h3>
+                {% for item in order %}
+				<ul class="order_list_th w978 clearfix">
+					<li class="col01">{{ item.otime }}</li>
+					<li class="col02">{{ item.oid }}</li>
+					<li class="col02 stress">未支付</li>
+				</ul>
+
+				<table class="order_list_table w980">
+					<tbody>
+						<tr>
+							<td width="55%">
+                                {% for i in item.orderdetailinfo_set.all %}
+                                    <ul class="order_goods_list clearfix">
+                                        <li class="col01"><img src="/upload/df_goods/{{ i.ogoods.gpic }}></li>
+                                        <li class="col02">{{ i.ogoods.gtitle }}<em>{{ i.ogoods.gunit }}元/</em></li>
+                                        <li class="col03">{{ i.oprice }}</li>
+                                    </ul>
+                                {% endfor %}
+							</td>
+							<td width="15%">{{ i.ototal }}元</td>
+							<td width="15%">待付款</td>
+							<td width="15%"><a href="#" class="oper_btn">去付款</a></td>
+						</tr>
+					</tbody>
+				</table>
+            {% endfor %}
+
+            <div class="pagenation">
+					{% if order.has_previous %}
+					<a href="/user/centerorder/{{ order.previous_page_number }}">上一页</a>
+					{% endif %}
+					{% for i in order.paginator.page_range %}
+					{% if order.number == i %}
+					<a class="active">{{ i }}</a>
+					{% else %}
+					<a href="/user/centerorder/{{ i }}">{{ i }}</a>
+					{% endif %}
+					{% endfor %}
+					{% if order.has_next %}
+					<a href="/user/centerorder/{{ order.next_page_number }}">下一页</a>
+					{% endif %}
+				</div>
+		</div>
+	</div>
+
+{% endblock body %}

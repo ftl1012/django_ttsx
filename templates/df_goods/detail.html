@@ -1,0 +1,249 @@
+{% extends 'df_goods/base.html' %}
+
+{%block head%}
+
+    <script>
+        $(function () {
+            $('#jiahao').click(function () {
+                num = parseFloat($('#shuliang').val());
+                $('#shuliang').val(num+1);
+                $('#shuliang').blur();
+            });
+
+            $('#jianhao').click(function () {
+                num = parseFloat($('#shuliang').val());     //专门用于把字符串转换成数值
+                if (num > 1){
+                    $('#shuliang').val(num-1);
+                    $('#shuliang').blur();
+                }
+            });
+
+            $('#shuliang').blur(function () {
+                num = parseInt($('#shuliang').val());     //val() 方法返回或设置被选元素的值。
+                if(num){        //如果不为空
+                    if (num < 1)        //如果小于1
+                        num = 1;
+                    price = parseFloat($('#gprice').text());    //text() 方法方法设置或返回被选元素的文本内容。
+                    total = num * price;
+                    $('#shuliang').val(num);
+                    $('#show_count').text(total.toFixed(2) + '元');  //toFixed(num) 方法可把原来的数四舍五入为小数位数为num的数字。
+                } else {
+                    $('#shuliang').val(1);
+                    price = parseFloat($('#gprice').text());    //text() 方法方法设置或返回被选元素的文本内容。
+                    total = 1.0 * price;
+                    $('#show_count').text(total.toFixed(2) + '元');  //toFixed(num) 方法可把原来的数四舍五入为小数位数为num的数字。
+                }
+                }
+            );
+            var $add_x = $('#add_cart').offset().top;
+            var $add_y = $('#add_cart').offset().left;
+
+            var $to_x = $('#show_count').offset().top;
+            var $to_y = $('#show_count').offset().left;
+
+            $('#add_cart').click(function(){
+                $(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'});
+                if ($('.login_btn').text().indexOf('登录') >= 0){
+                    alert("请先登录后再购买");
+                    location.href = '/user/login/';
+                    return;
+                }
+                //动画
+                $(".add_jump").stop().animate({
+                    'left': $to_y+7,
+                    'top': $to_x+7},
+                    "fast",
+                    function() {
+                        $(".add_jump").fadeOut('fast'
+                        //     function(){
+                        //     $('#show_count').html();
+                        // }
+                        );
+                    }
+                );
+                //异步      ajax
+                s1();
+            });
+            function s1() {
+                num = parseInt($('#shuliang').val());
+                $.get('/cart/add{{goods.id}}' + num + '/', function (data) {
+                    $('#show_count').text(data.count);
+                });
+            }
+        })
+    </script>
+
+    {% if request.session.user_name|default:'' != '' %}
+        <script>
+            f();
+            function f() {  //进入页面时刷新购物车数量  规定此时商品id和数量都为0
+                 $.get('/cart/add0_0/', function (data) {
+                    $('#show_count').text(data.count);
+                });
+            }
+        </script>
+    {% endif %}
+
+{%endblock head%}
+
+{% block body %}
+
+    <div class="navbar_con">
+		<div class="navbar clearfix">
+			<div class="subnav_con fl">
+				<h1>全部商品分类</h1>
+				<span></span>
+				<ul class="subnav">
+					<li><a href="/goods/list1_1_1/" class="fruit">新鲜水果</a></li>
+					<li><a href="/goods/list2_1_1/" class="seafood">海鲜水产</a></li>
+					<li><a href="/goods/list3_1_1/" class="meet">猪牛羊肉</a></li>
+					<li><a href="/goods/list4_1_1/" class="egg">禽类蛋品</a></li>
+					<li><a href="/goods/list5_1_1/" class="vegetables">新鲜蔬菜</a></li>
+					<li><a href="/goods/list6_1_1/" class="ice">速冻食品</a></li>
+				</ul>
+			</div>
+			<ul class="navlist fl">
+				<li><a href="">首页</a></li>
+				<li class="interval">|</li>
+				<li><a href="">手机生鲜</a></li>
+				<li class="interval">|</li>
+				<li><a href="">抽奖</a></li>
+			</ul>
+		</div>
+	</div>
+
+	<div class="breadcrumb">
+		<a href="#">全部分类</a>
+		<span>></span>
+		<a href="#">{{ type }}</a>
+		<span>></span>
+		<a href="#">{{ goods.gtitle }}</a>
+	</div>
+
+
+	<div class="goods_detail_con clearfix">
+		<div class="goods_detail_pic fl"><img src="/upload/{{ goods.gpic }}"></div>
+
+		<div class="goods_detail_list fr">
+            <h3>{{ goods.gtitle }}</h3>
+            <p>{{ goods.gjianjie }}</p>
+            <div class="prize_bar" id='gprice'>
+                <span  class="show_pirze">¥<em  id ='gprice'> {{ goods.gprice }}</em></span>
+                <span class="show_unit">单  位：{{ goods.gunit }}</span>
+            </div>
+            <div class="goods_num clearfix">
+                <div class="num_name fl" id="gkucun">库存：{{ goods.gkucun }}</div>
+                <div class="num_add fl">
+                    <input type="text" class="num_show fl" value="1" id="shuliang">
+                    <a href="javascript:;" onclick="add()" id='jiahao' class="add fr">+</a>
+                    <a href="javascript:;" onclick="minus()" id="jianhao"  class="minus fr">-</a>
+                </div>
+			</div>
+            <div class="total" id="show_count">总价：<em >{{ goods.gprice }}</em></div>
+            <div class="operate_btn">
+				<a href="javascript:;" class="buy_btn">立即购买</a>
+				<a href="/cart/add{{ goods.id }}_1" class="add_cart" id="add_cart">加入购物车</a>
+			</div>
+        </div>
+
+
+		</div>
+	</div>
+
+	<div class="main_wrap clearfix">
+		<div class="l_wrap fl clearfix">
+			<div class="new_goods">
+				<h3>新品推荐</h3>
+				<ul>
+                    {% for good in recomand_goods %}
+                        <li>
+                            <a href="#"><img src="/upload/{{ good.gpic }}"></a>
+                            <h4><a href="#">{{ good.gtitle }}</a></h4>
+                            <div class="prize">￥{{ good.gprice }}</div>
+                        </li>
+                    {% endfor %}
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<div class="r_wrap fr clearfix">
+			<ul class="detail_tab clearfix">
+				<li class="active">商品介绍</li>
+				<li>评论</li>
+			</ul>
+
+			<div class="tab_content">
+				<dl>
+					<dt>商品详情：</dt>
+					<dd>{{ goods.gtitle }} </dd>
+				</dl>
+			</div>
+
+		</div>
+	</div>
+
+<div class="add_jump"></div>
+
+	<script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
+	<script type="text/javascript">
+		var $add_x = $('#add_cart').offset().top;
+		var $add_y = $('#add_cart').offset().left;
+
+		var $to_x = $('#show_count').offset().top;
+		var $to_y = $('#show_count').offset().left;
+
+		$(".add_jump").css({'left':$add_y+80,'top':$add_x+10,'display':'block'});
+		$('#add_cart').click(function(){
+			$(".add_jump").stop().animate({
+				'left': $to_y+7,
+				'top': $to_x+7},
+				"fast", function() {
+					$(".add_jump").fadeOut('fast',function(){
+						$('#show_count').html(2);
+					});
+
+			});
+		})
+	</script>
+
+
+     <script>
+        function add() {
+            var num = parseInt($('#shuliang').val());
+            var inventory = parseInt($('#gkucun').text());
+
+            if(num >= inventory){
+                $('#shuliang').val(num);
+            }else{
+                $('#shuliang').val(num+1);
+            }
+            total();
+        }
+
+        function minus() {
+            num = parseFloat($('#shuliang').val());
+            console.log("min:", num);
+            if(num <= 1){
+                num = 1;
+            }else{
+                $('#shuliang').val(num-1);
+            }
+            total();
+            $('#minis').blur();
+        }
+
+        function total() {
+            console.log('total...');
+            num = parseInt($('#shuliang').val());
+            price = parseFloat($('#gprice').text());
+
+            total = num * price;
+            console.log(total);
+            $('#gtotal').text(total.toFixed(2) + '元')
+        }
+
+
+    </script>
+
+{% endblock body %}

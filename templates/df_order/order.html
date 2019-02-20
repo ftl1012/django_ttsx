@@ -1,0 +1,175 @@
+{% extends 'df_user/base.html' %}
+
+{% block head %}{% endblock head %}
+
+{% block body %}
+	<h3 class="common_title">确认收货地址</h3>
+
+	<div class="common_list_con clearfix">
+		<dl>
+			<dt>寄送到：</dt>
+			<dd><input type="radio" name="" checked="">北京市 海淀区 东北旺西路8号中关村软件园 （李思 收） 182****7528</dd>
+		</dl>
+		<a href="/user/site/" class="edit_site">编辑收货地址</a>
+
+	</div>
+
+	<h3 class="common_title">支付方式</h3>
+	<div class="common_list_con clearfix">
+		<div class="pay_style_con clearfix">
+			<input type="radio" name="pay_style" checked>
+			<label class="cash">货到付款</label>
+			<input type="radio" name="pay_style">
+			<label class="weixin">微信支付</label>
+			<input type="radio" name="pay_style">
+			<label class="zhifubao"></label>
+			<input type="radio" name="pay_style">
+			<label class="bank">银行卡支付</label>
+		</div>
+	</div>
+
+	<h3 class="common_title">商品列表</h3>
+
+	<div class="common_list_con clearfix">
+		<ul class="goods_list_th clearfix">
+			<li class="col01">商品名称</li>
+			<li class="col02">商品单位</li>
+			<li class="col03">商品价格</li>
+			<li class="col04">数量</li>
+			<li class="col05">小计</li>
+		</ul>
+		{% if active == 1 %}
+		{% for i in carts %}
+		<ul class="goods_list_td clearfix" id="{{ i.id }}">
+			<li class="col01">{{ forloop.counter }}</li>
+			<li class="col02"><img src="/upload/{{ i.goods.gpic }}"></li>
+			<li class="col03">{{ i.goods.gtitle|slice:"6"}}</li>
+			<li class="col04">{{ i.goods.gunit }}</li>
+            <li class="col05">{{ i.goods.gprice }}<em>元</em></li>
+			<li class="col06">{{ i.count }}</li>
+			<li class="col07">25.80元</li>
+		</ul>
+		{% endfor %}
+		{% elif active == 2 %}
+			<ul class="goods_list_td clearfix" id="{{ goods.id }}">
+			<li class="col01">1</li>
+			<li class="col02"><img src="/upload/{{ i.goods.gpic }}"></li>
+			<li class="col03">{{ goods.gtitle|slice:"6"}}</li>
+			<li class="col04">{{ goods.gunit }}</li>
+			<li class="col05">{{ goods.gprice }}元</li>
+			<li class="col06">{{ count }}</li>
+			<li class="col07">{{ i.count }}</li>
+		</ul>
+
+		{% endif %}
+
+	</div>
+
+	<h3 class="common_title">总金额结算</h3>
+
+	<div class="common_list_con clearfix">
+		<div class="settle_con">
+			{% if active == 1 %}
+			<div class="total_goods_count">共<em>{{ carts|length }}</em>件商品，商品总金额<b id="zong">42.60元</b></div>
+			{% elif active == 2 %}
+			<div class="total_goods_count">共<em>1</em>件商品，商品总金额<b id="zong">42.60元</b></div>
+			{% endif %}
+			<div class="transit">运费：<b>10元</b></div>
+			<div class="total_pay">应付款：<b id="fu">52.60元</b></div>
+		</div>
+	</div>
+
+	<div class="order_submit clearfix">
+		<a href="javascript:;" id="order_btn">提交订单</a>
+	</div>
+
+<script>
+
+		function getCookie(name) {
+    		var r = document.cookie.match("\\b" + name + "=([^;]*)\\b");
+    		return r ? r[1] : undefined;
+		}
+
+		$(".col07").html(function () {
+			var num1 = parseFloat($(this).prevAll(".col05").html());
+			var num2 = parseInt($(this).prevAll(".col06").html());
+			return (num1*100*num2*100/10000).toFixed(2)+"元"
+        });
+
+		$("#zong").html(function () {
+			var zong = 0;
+			$(".col07").each(function () {
+				zong += parseFloat($(this).html());
+            });
+			return zong.toFixed(2)+"元";
+        });
+
+		$("#fu").html(function () {
+			return (parseFloat($("#zong").html())+10).toFixed(2) +"元";
+        });
+		{% if user.uadder == "" or user.ushou == "" or user.utel == "" %}
+
+		$('#order_btn').html("请补全收货信息");
+		$(".order_submit a").css("background-color","#ddd");
+
+		{% else %}
+
+		{% if active == 1 %}
+		$("#order_btn").click(function () {
+		    console.log("单位1：  提交订单的URL:", cartid());
+			$.post("/order/ordercl s",cartid(),function (data) {
+				if(data.data == 1){
+				    localStorage.setItem('order_finish',2);
+
+					$('.popup_con').fadeIn('fast', function() {
+
+						setTimeout(function(){
+							$('.popup_con').fadeOut('fast',function(){
+								window.location.href = '/';
+							});
+						},3000)
+
+					});
+				}
+				else{
+				    alert("提交失败");
+				}
+            })
+        });
+
+		function cartid() {
+		    var id ={};
+			$(".goods_list_td").each(function (i) {
+			    id["cart"+i] = $(this).attr("id");
+            });
+			console.log("提交订单的ID:" + id);
+			return id;
+        }
+
+		{% elif active == 2 %}
+		$("#order_btn").click(function () {
+			$.post("/order/ordercl/1",{"id":{{ goods.id }},"count":{{ count }},"csrfmiddlewaretoken":getCookie("csrftoken")},function (data) {
+                if (data.data == 1) {
+                    localStorage.setItem('order_finish', 2);
+
+                    $('.popup_con').fadeIn('fast', function () {
+
+                        setTimeout(function () {
+                            $('.popup_con').fadeOut('fast', function () {
+                                window.location.href = '/';
+                            });
+                        }, 3000)
+
+                    });
+                }
+                else {
+                    alert("提交失败");
+                }
+            })
+        });
+
+		{% endif %}
+		{% endif %}
+	</script>
+
+{% endblock body %}
